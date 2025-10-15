@@ -27,6 +27,12 @@ class Retriever:
         return self.embedding_model.encode([query], convert_to_numpy=True)
     
     def retrieve(self, query:str, top_k: int = 5) -> List[Tuple[str, float]]:
-        
+        query_vector = self.embed_query
+        distances, indices = self.index.search(query_vector, top_k)
+
+        results = []
+        for idx, dist in zip(indices[0], distances[0]):
+            results.append((self.chunks[idx], dist))
+        return results
          
         
