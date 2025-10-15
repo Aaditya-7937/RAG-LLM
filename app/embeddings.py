@@ -5,6 +5,9 @@ import faiss
 from sentence_transformers import SentenceTransformer
 from typing import List, Tuple
 
+FAISS_INDEX_PATH = "data/faiss_index/index.faiss"
+CHUNKS_PATH = "data/processed_chunks.pkl"
+
 def load_embedding_model(model_name: str = "Qwen/Qwen3-Embedding-0.6B"):
     model = SentenceTransformer(model_name)
     return model
@@ -34,13 +37,30 @@ def load_chunks(load_path: str = "data/processed_chunks.pkl") -> List[str]:
     with open(load_path, "rb") as f:
         return pickle.load(f)
     
-def create_embeddings_for_docs(chunks: List[str], model_name : str = "Qwen/Qwen3-Embedding-0.6B"):
-
+def create_embeddings_for_docs(chunks: List[str], model_name: str = "Qwen/Qwen3-Embedding-0.6B"):
+    """
+    Generate embeddings for new chunks and update the existing FAISS index and chunks list.
+    """
     model = load_embedding_model(model_name)
     embeddings = generate_embeddings(chunks, model)
-    build_faiss_index(embeddings)
-    save_chunks(chunks)
-    print("Embeddings generated and FAISS index saved successfully")
+
+    # Check if FAISS index and chunks already exist
+    if os.path.exists(FAISS_INDEX_PATH) and os.path.exists(CHUNKS_PATH):
+        existing_index = load_faiss_index(FAISS_INDEX_PATH)
+        existing_chunks = load_chunks(CHUNKS_PATH)
+
+        # Add new embeddings to existing index
+        existing_index.add(embeddings)
+        faiss.write_index(existing_index, FAISS_INDEX_PATH)
+
+        # Append new chunks to existing chunks list
+        save_chunks(existing_chunks + chunks, CHUNKS_PATH)
+        print(f"Added {len(chunks)} new chunks to existing FAISS index and saved {len(existing_chunks + chunks)} total chunks.")
+    else:
+        # No existing index: create new
+        build_faiss_index(embeddings)
+        save_chunks(chunks)
+        print(f"Created new FAISS index with {len(chunks)} chunks.")
     
 
 
