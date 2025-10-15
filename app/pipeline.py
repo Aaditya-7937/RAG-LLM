@@ -11,12 +11,13 @@ class RAGPipeline:
         self.chat_history: List[Dict[str, str]] = []
 
     def ask(self, query : str, history: List[Dict[str, str]] = None, top_k : int = 5) -> str:
-        context = "\n".join([f"{msg['role']}: {msg['content']}" for msg in self.chat_history])
-        
+        # context = "\n".join([f"{msg['role']}: {msg['content']}" for msg in self.chat_history])
+        context_history = history if history is not None else self.chat_history
+        context_text = "\n".join([f"{msg['role']}: {msg['content']}" for msg in context_history])
         retrieved_results = self.retriever.retrieve(query, top_k)
         chunks_only: List[str] = [c[0] for c in retrieved_results]
 
-        answer = self.llm.generate_answer(query=query, retrieved_chunks=chunks_only, chat_history = context)
+        answer = self.llm.generate_answer(query=query, retrieved_chunks=chunks_only, chat_history = context_text)
 
         return answer
     
