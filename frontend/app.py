@@ -7,11 +7,9 @@ API_URL = "http://127.0.0.1:8000"
 st.set_page_config(page_title="Knowledge Base Chat", layout="wide")
 st.title("🤖 Knowledge Base Chat")
 
-# Keep chat history
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# --- Sidebar for file uploads ---
 st.sidebar.header("Upload your documents")
 uploaded_files = st.sidebar.file_uploader(
     "Upload PDFs or TXT files",
@@ -31,7 +29,6 @@ if uploaded_files:
         except Exception as e:
             st.sidebar.error(f"Error: {e}")
 
-# --- Chat input ---
 user_input = st.text_input("Ask a question about your documents:")
 
 if st.button("Send") and user_input:
@@ -49,7 +46,6 @@ if st.button("Send") and user_input:
     except Exception as e:
         st.session_state.messages.append({"role": "bot", "content": f"Error: {e}"})
 
-# --- Display chat history with ChatGPT-like style ---
 for msg in st.session_state.messages:
     if msg["role"] == "user":
         st.markdown(
